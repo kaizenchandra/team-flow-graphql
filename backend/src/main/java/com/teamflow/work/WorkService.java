@@ -379,8 +379,8 @@ public class WorkService {
         var q = em
                 .createQuery(
                         "from CommentEntity where taskId=:t" +
-                                (after == null ? "" : " and id>:after") +
-                                " order by id",
+                                (after == null ? "" : " and id<:after") +
+                                " order by id desc",
                         CommentEntity.class
                 )
                 .setParameter("t", tid);

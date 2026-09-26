@@ -12,7 +12,7 @@ the host. Images run as non-root except PostgreSQL's entrypoint initialization.
 ## Single Linux host / TLS
 
 Provide Docker/Compose, disk space/monitoring, DNS and TLS termination. Put an approved host reverse proxy in front of
-`127.0.0.1:8088`, set `APP_ORIGIN=https://your-domain`, `COOKIE_SECURE=true`. Preserve Host, Upgrade, Connection headers
+`127.0.0.1:8088`, set `APP_ORIGIN=https://your-domain`, `COOKIE_SECURE=true`, `PUBLIC_SCHEME=https`. Preserve Host, Upgrade, Connection headers
 and idle timeout >75 seconds. Do not expose backend or database publicly. Set a 64 KiB request body limit at the outer
 proxy and enable HSTS there after TLS works. No TLS certificates or public host are provisioned by this project.
 
@@ -75,6 +75,9 @@ schema downgrade implicitly. Session state is in memory, so a backend restart re
 
 ## Observability and external blockers
 
+`PUBLIC_SCHEME` is an operator-controlled value (`http` locally, `https` with TLS). Nginx renders it into the forwarding configuration at startup and does not derive it from client headers. The proxy intentionally does not trust arbitrary client X-Forwarded-For values, so per-IP limits aggregate clients behind the proxy. Before serving larger teams, configure a trusted proxy chain and dedicated edge rate limiting.
+
+
 Health endpoints are public and return sanitized status. Prometheus metrics are authenticated and not exposed by the
 Nginx public route. For production scraping, define a dedicated internal authentication/monitoring integration.
 Containers emit ECS JSON logs with per-request correlation IDs; no request bodies, credentials or session IDs are logged
@@ -82,3 +85,5 @@ by application code.
 
 No host, domain, deployment runner or remote authorization was supplied. Remote deployment is therefore blocked on those
 external details. Consult `docs/progress.md` for the actual local deployment status.
+
+Local execution was verified at http://localhost:8088 with all three containers healthy, passing smoke checks and production browser tests. Remote HTTPS configuration is prepared but remains unverified until a target/domain is supplied.

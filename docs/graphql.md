@@ -10,7 +10,7 @@ payload/input types and enums are reflected in generated TypeScript documents un
 Sanitized extension codes: `FORBIDDEN`, `BAD_INPUT`, `CONFLICT`, `LAST_OWNER`, `DUPLICATE_ACCOUNT`, `INTERNAL_ERROR`.
 GraphQL parse/schema validation errors use GraphQL's standard error classification. HTTP rejects unauthenticated
 requests with 401, failed CSRF/origin with 403, oversized JSON with 413 and rate limits with 429. Depth limit 10,
-complexity 250, JSON/WS messages 64 KiB, auth limit 20 requests/minute/IP, general limit 600/minute/IP. Limits are
+complexity 250, JSON/WS messages 64 KiB, auth limit 20 requests/minute/IP, general limit 600/minute/IP; WebSocket operations 120/minute/session. Limits are
 process-local and use bounded caches. CSRF applies to GraphQL queries as well as mutations because all HTTP operations
 use POST.
 
@@ -88,7 +88,7 @@ subscription Changes($workspaceId: ID!) {
 ```
 
 All complete executable UI operations are in `frontend/src/operations.graphql`. Task cursors are bound to project and
-sort; reset them when changing filters. Comments advance by the last ID (ascending); activity advances by the last ID
+sort; reset them when changing filters. Comments show newest first and advance by the last ID (descending); activity advances by the last ID
 (descending). First defaults to 20/30 and cannot exceed 50. Access checks happen at the application layer before data
 retrieval. Nested records only originate from authorized parent queries; project and user associations are batched.
 Event payloads contain IDs, never task descriptions or comment bodies.

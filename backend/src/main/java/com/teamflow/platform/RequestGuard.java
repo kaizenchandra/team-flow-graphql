@@ -43,6 +43,7 @@ public class RequestGuard extends OncePerRequestFilter {
         String id = java.util.UUID.randomUUID().toString();
         res.setHeader("X-Request-ID", id);
         org.slf4j.MDC.put("requestId", id);
+        long start = System.nanoTime();
         try {
             boolean websocket = "websocket".equalsIgnoreCase(
                     req.getHeader("Upgrade")
@@ -128,6 +129,8 @@ public class RequestGuard extends OncePerRequestFilter {
             }
             chain.doFilter(req, res);
         } finally {
+            String route = req.getRequestURI().startsWith("/auth/") ? "auth" : req.getRequestURI().equals("/graphql") ? "graphql" : "infrastructure";
+            org.slf4j.LoggerFactory.getLogger(RequestGuard.class).info("request route={} status={} durationMs={}", route, res.getStatus(), (System.nanoTime() - start) / 1_000_000);
             org.slf4j.MDC.remove("requestId");
         }
     }

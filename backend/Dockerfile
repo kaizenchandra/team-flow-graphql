@@ -1,9 +1,9 @@
 FROM maven:3.9.11-eclipse-temurin-21 AS build
 WORKDIR /src
 COPY backend/pom.xml ./pom.xml
-RUN mvn -B dependency:go-offline
+RUN --mount=type=cache,target=/root/.m2 mvn -B dependency:go-offline
 COPY backend/src ./src
-RUN mvn -B package -DskipTests
+RUN --mount=type=cache,target=/root/.m2 mvn -B package -DskipTests
 FROM eclipse-temurin:21.0.8_9-jre-jammy
 RUN groupadd --gid 10001 teamflow && useradd --uid 10001 --gid teamflow --no-create-home teamflow
 WORKDIR /app

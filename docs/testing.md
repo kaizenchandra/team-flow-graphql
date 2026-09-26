@@ -17,3 +17,7 @@ run against a development/test environment only.
 Reports: backend `target/surefire-reports`, frontend `playwright-report` and `test-results` (including desktop/mobile
 screenshots). CI runs the same essential checks and builds/runs production images before browser tests. Only the
 progress record states which checks actually ran; test files and workflow definitions are not evidence of execution.
+
+The production wire-protocol test also opens a raw authenticated WebSocket, proves a non-member cannot subscribe, logs out while another socket remains open, then proves that socket cannot query profile data. The reconnect test explicitly closes only the GraphQL socket while offline and asserts the disconnected browser cannot see the intervening mutation until reconnection. Event-window tests cover duplicate suppression and bounded ID retention.
+
+The complete browser workflow also verifies status/priority filtering, priority sorting, keyboard Escape, task deletion, and persistence after a fresh sign-in. Final executed evidence is recorded in `progress.md`.

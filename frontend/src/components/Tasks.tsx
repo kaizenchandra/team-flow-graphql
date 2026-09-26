@@ -326,6 +326,7 @@ export function TaskDetail({
     const client = useApolloClient();
     const [snapshot, setSnapshot] = useState<G.TaskFieldsFragment>();
     const [confirm, setConfirm] = useState(false);
+    const [hasMoreComments, setHasMoreComments] = useState(true);
     useEffect(() => {
         if (q.data && !snapshot) setSnapshot(q.data.task);
     }, [q.data, snapshot]);
@@ -362,7 +363,7 @@ export function TaskDetail({
                                 <p>{c.body}</p>
                             </article>
                         ))}
-                        {(q.data?.comments.length ?? 0) >= 50 && (
+                        {hasMoreComments && (q.data?.comments.length ?? 0) >= 50 && (
                             <button
                                 onClick={() =>
                                     void client
@@ -371,6 +372,7 @@ export function TaskDetail({
                                             variables: {id, after: q.data!.comments.at(-1)!.id},
                                         })
                                         .then((r) => {
+                                            setHasMoreComments((r.data?.comments.length ?? 0) === 50);
                                             client.cache.updateQuery(
                                                 {query: G.DetailDocument, variables: {id}},
                                                 (old) =>
@@ -382,7 +384,7 @@ export function TaskDetail({
                                                         ],
                                                     },
                                             );
-                                        })
+                                        }).catch(setError)
                                 }
                             >
                                 Load older conversation entries

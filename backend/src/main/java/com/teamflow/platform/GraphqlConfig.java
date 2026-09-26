@@ -15,6 +15,11 @@ import org.springframework.graphql.server.WebGraphQlInterceptor;
 public class GraphqlConfig {
 
     @Bean
+    org.springframework.boot.web.servlet.ServletContextInitializer websocketLimits() {
+        return context -> context.setInitParameter("org.apache.tomcat.websocket.textBufferSize", "65536");
+    }
+
+    @Bean
     MaxQueryDepthInstrumentation depth() {
         return new MaxQueryDepthInstrumentation(10);
     }
@@ -26,8 +31,17 @@ public class GraphqlConfig {
 
     @Bean
     WebGraphQlInterceptor sessionContext(SessionAccess sessions) {
+        var operations = com.github.benmanes.caffeine.cache.Caffeine.newBuilder()
+                .maximumSize(10000).expireAfterWrite(java.time.Duration.ofMinutes(1))
+                .<String, java.util.concurrent.atomic.AtomicInteger>build();
         return (request, chain) -> {
             var session = sessions.find(request.getHeaders().getFirst("Cookie"));
+            if (request instanceof org.springframework.graphql.server.WebSocketGraphQlRequest) {
+                // The handshake principal is stale after logout; validate each operation against its session.
+                sessions.email(session);
+                if (operations.get(session.getId(), key -> new java.util.concurrent.atomic.AtomicInteger()).incrementAndGet() > 120)
+                    return reactor.core.publisher.Mono.error(new Problem("RATE_LIMITED", "Too many WebSocket operations. Reconnect after one minute."));
+            }
             if (session != null) request.configureExecutionInput((input, builder) ->
                     builder.graphQLContext(Map.of("session", session)).build()
             );

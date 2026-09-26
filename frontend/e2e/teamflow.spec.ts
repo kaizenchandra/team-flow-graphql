@@ -155,6 +155,23 @@ test("complete workflow, independent browsers, reconnect and revoked membership"
         {id: pid},
     );
     expect(denied.errors[0].extensions.code).toBe("FORBIDDEN");
+    await pa.getByRole("button", {name: "Projects", exact: true}).click();
+    await pa.getByLabel("Priority", {exact: true}).selectOption("HIGH");
+    await expect(pa.getByRole("button", {name: /Created during disconnect/})).toHaveCount(0);
+    await expect(pa.getByRole("button", {name: /Release checklist reviewed/})).toBeVisible();
+    await pa.getByLabel("Priority", {exact: true}).selectOption("");
+    await pa.getByLabel("Status", {exact: true}).selectOption("DONE");
+    await expect(pa.getByText("Room for your next idea.")).toBeVisible();
+    await pa.getByLabel("Status", {exact: true}).selectOption("");
+    await pa.getByLabel("Sort by").selectOption("PRIORITY_DESC");
+    await expect(pa.locator(".task-row").first()).toContainText("Release checklist reviewed");
+    await pa.getByRole("button", {name: /Created during disconnect/}).click();
+    await pa.keyboard.press("Escape");
+    await expect(pa.getByRole("dialog")).toHaveCount(0);
+    await pa.getByRole("button", {name: /Created during disconnect/}).click();
+    await pa.getByRole("button", {name: "Delete task", exact: true}).click();
+    await pa.getByRole("button", {name: "Confirm delete", exact: true}).click();
+    await expect(pa.getByRole("button", {name: /Created during disconnect/})).toHaveCount(0);
     await pa.getByRole("button", {name: "Activity", exact: true}).click();
     await expect(
         pa.getByText("task created", {exact: true}).first(),
@@ -172,7 +189,7 @@ test("complete workflow, independent browsers, reconnect and revoked membership"
         "query($id:ID!){tasks(projectId:$id){nodes{id title}}}",
         {id: pid},
     );
-    expect(persisted.data.tasks.nodes).toHaveLength(2);
+    expect(persisted.data.tasks.nodes).toHaveLength(1);
     expect(wid).toBeTruthy();
     await a.close();
     await b.close();

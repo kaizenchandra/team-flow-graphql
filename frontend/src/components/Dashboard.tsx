@@ -1,3 +1,4 @@
+import {EventWindow} from "../events";
 import {useEffect, useRef, useState} from "react";
 import {useApolloClient, useMutation, useSubscription,} from "@apollo/client/react";
 import * as G from "../gql/graphql";
@@ -29,7 +30,7 @@ export function Dashboard({
     const client = useApolloClient();
     const [createWorkspace] = useMutation(G.CreateWorkspaceDocument);
     const [createProject] = useMutation(G.CreateProjectDocument);
-    const seen = useRef(new Set<string>());
+    const seen = useRef(new EventWindow());
     useEffect(() => {
         seen.current.clear();
     }, [workspace?.id]);
@@ -38,10 +39,7 @@ export function Dashboard({
         skip: !workspace,
         onData: ({data}) => {
             const event = data.data?.workspaceChanges;
-            if (!event || seen.current.has(event.id)) return;
-            seen.current.add(event.id);
-            if (seen.current.size > 512)
-                seen.current.delete(seen.current.values().next().value!);
+            if (!event || !seen.current.accept(event.id)) return;
             void client.refetchQueries({include: "active"});
         },
         onError: (e) => {

@@ -50,7 +50,7 @@ public class WorkspaceService {
 
     public MembershipEntity require(String email, String workspaceId) {
         var uid = identity.me(email).id();
-        return em
+        var member = em
                 .createQuery(
                         "from MembershipEntity where workspaceId=:w and userId=:u",
                         MembershipEntity.class
@@ -60,6 +60,8 @@ public class WorkspaceService {
                 .getResultStream()
                 .findFirst()
                 .orElseThrow(Problem::forbidden);
+        em.refresh(member);
+        return member;
     }
 
     public void requireManager(String email, String workspaceId) {

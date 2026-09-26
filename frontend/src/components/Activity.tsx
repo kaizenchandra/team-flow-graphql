@@ -1,9 +1,12 @@
 import {useQuery} from "@apollo/client/react";
 import * as G from "../gql/graphql";
 import {Notice} from "./ui";
+import {useState} from "react";
 
 export function Activity({workspaceId}: { workspaceId: string }) {
     const q = useQuery(G.ActivityDocument, {variables: {workspaceId}});
+    const [hasMore, setHasMore] = useState(true);
+    const [error, setError] = useState<unknown>();
     return (
         <section>
             <div className="page-heading">
@@ -13,7 +16,7 @@ export function Activity({workspaceId}: { workspaceId: string }) {
                     <p className="muted">A shared record of what moved forward.</p>
                 </div>
             </div>
-            <Notice error={q.error}/>
+            <Notice error={q.error ?? error}/>
             {q.loading && <p>Loading activity…</p>}
             <div className="panel">
                 {q.data?.activity.length === 0 && <p>No activity yet.</p>}
@@ -27,7 +30,7 @@ export function Activity({workspaceId}: { workspaceId: string }) {
                         </div>
                     </article>
                 ))}
-                {(q.data?.activity.length ?? 0) >= 30 && (
+                {hasMore && (q.data?.activity.length ?? 0) >= 30 && (
                     <button
                         onClick={() =>
                             void q.fetchMore({
@@ -35,7 +38,7 @@ export function Activity({workspaceId}: { workspaceId: string }) {
                                 updateQuery: (prev, {fetchMoreResult: next}) => ({
                                     activity: [...prev.activity, ...next.activity],
                                 }),
-                            })
+                            }).then(result => setHasMore(result.data.activity.length > 0)).catch(setError)
                         }
                     >
                         Load more activity

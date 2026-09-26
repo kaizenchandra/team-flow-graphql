@@ -6,7 +6,7 @@ COPY frontend/ ./
 COPY backend/src/main/resources/graphql/ /src/backend/src/main/resources/graphql/
 RUN npm run build
 FROM nginxinc/nginx-unprivileged:1.28.0-alpine
-COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --chown=101:101 deploy/nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=build /src/frontend/dist /usr/share/nginx/html
 USER 101
 EXPOSE 8080

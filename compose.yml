@@ -33,6 +33,8 @@ services:
     mem_limit: 768m
   web:
     image: teamflow-web:${IMAGE_TAG:-local}
+    environment:
+      PUBLIC_SCHEME: ${PUBLIC_SCHEME:-http}
     build:
       context: .
       dockerfile: frontend/Dockerfile

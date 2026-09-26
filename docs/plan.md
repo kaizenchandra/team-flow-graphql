@@ -12,3 +12,7 @@
 | 7     | Acceptance audit and handover                        | Record executed evidence and precise limitations               |
 
 Each gate requires passing evidence or an explicit environmental block; implementation alone does not complete a gate.
+
+## Final gate status
+
+2026-09-27: Phases 0–5 and 7 passed for the local MVP. Phase 6 production images and local Compose deployment passed; remote execution is blocked only on the target/access/authorization details. See `progress.md` for exact test counts, evidence, acceptance audit and operational limits.
