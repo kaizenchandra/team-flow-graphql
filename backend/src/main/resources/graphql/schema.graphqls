@@ -1,0 +1,49 @@
+enum Role { OWNER ADMIN MEMBER }
+enum TaskStatus { TODO IN_PROGRESS DONE }
+enum Priority { LOW MEDIUM HIGH URGENT }
+enum TaskSort { CREATED_ASC UPDATED_DESC PRIORITY_DESC }
+type User { id: ID!, email: String!, name: String! }
+type Workspace { id: ID!, name: String!, role: Role!, projects: [Project!]! }
+type Member { user: User!, role: Role! }
+type Project { id: ID!, workspaceId: ID!, name: String! }
+type Task { id: ID!, projectId: ID!, title: String!, description: String!, status: TaskStatus!, priority: Priority!, assignee: User, dueDate: String, version: Int!, createdAt: String!, updatedAt: String! }
+type TaskPage { nodes: [Task!]!, endCursor: String, hasNextPage: Boolean! }
+type Comment { id: ID!, taskId: ID!, body: String!, author: User!, createdAt: String! }
+type Activity { id: ID!, type: String!, entityId: ID!, actor: User!, createdAt: String! }
+type ChangeEvent { id: ID!, workspaceId: ID!, entityId: ID!, type: String!, timestamp: String!, version: Int }
+input WorkspaceInput { name: String! }
+input MemberInput { workspaceId: ID!, email: String!, role: Role! }
+input RemoveMemberInput { workspaceId: ID!, userId: ID! }
+input ProjectInput { workspaceId: ID!, name: String! }
+input TaskInput { projectId: ID!, title: String!, description: String!, status: TaskStatus!, priority: Priority!, assigneeId: ID, dueDate: String }
+input UpdateTaskInput { id: ID!, version: Int!, title: String!, description: String!, status: TaskStatus!, priority: Priority!, assigneeId: ID, dueDate: String }
+input DeleteTaskInput { id: ID!, version: Int! }
+input CommentInput { taskId: ID!, body: String! }
+input TaskFilter { status: TaskStatus, priority: Priority, assigneeId: ID }
+type WorkspacePayload { workspace: Workspace! }
+type MemberPayload { member: Member! }
+type ProjectPayload { project: Project! }
+type TaskPayload { task: Task! }
+type CommentPayload { comment: Comment! }
+type DeletePayload { id: ID! }
+type Query {
+ me: User!
+ workspaces: [Workspace!]!
+ members(workspaceId: ID!): [Member!]!
+ projects(workspaceId: ID!): [Project!]!
+ tasks(projectId: ID!, filter: TaskFilter, sort: TaskSort = CREATED_ASC, first: Int! = 20, after: String): TaskPage!
+ task(id: ID!): Task!
+ comments(taskId: ID!, first: Int! = 30, after: ID): [Comment!]!
+ activity(workspaceId: ID!, first: Int! = 30, after: ID): [Activity!]!
+}
+type Mutation {
+ createWorkspace(input: WorkspaceInput!): WorkspacePayload!
+ setMember(input: MemberInput!): MemberPayload!
+ removeMember(input: RemoveMemberInput!): DeletePayload!
+ createProject(input: ProjectInput!): ProjectPayload!
+ createTask(input: TaskInput!): TaskPayload!
+ updateTask(input: UpdateTaskInput!): TaskPayload!
+ deleteTask(input: DeleteTaskInput!): DeletePayload!
+ addComment(input: CommentInput!): CommentPayload!
+}
+type Subscription { workspaceChanges(workspaceId: ID!): ChangeEvent! }

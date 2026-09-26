@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: teamflow
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:55432/teamflow}
+    username: ${DB_USER:teamflow}
+    password: ${DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  graphql:
+    websocket:
+      path: /graphql
+      keep-alive: 15s
+    graphiql:
+      enabled: false
+server:
+  port: 8080
+  shutdown: graceful
+  tomcat:
+    max-http-form-post-size: 64KB
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      timeout: 30m
+      cookie:
+        http-only: true
+        same-site: strict
+        secure: ${COOKIE_SECURE:false}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+teamflow:
+  origin: ${APP_ORIGIN:http://localhost:5173}
+logging:
+  level:
+    org.springframework.web: WARN

@@ -1,0 +1,178 @@
+query Home {
+  me {
+    id
+    name
+    email
+  }
+  workspaces {
+    id
+    name
+    role
+    projects {
+      id
+      name
+      workspaceId
+    }
+  }
+}
+query Members($workspaceId: ID!) {
+  members(workspaceId: $workspaceId) {
+    user {
+      id
+      name
+      email
+    }
+    role
+  }
+}
+query Tasks(
+  $projectId: ID!
+  $filter: TaskFilter
+  $sort: TaskSort
+  $first: Int
+  $after: String
+) {
+  tasks(
+    projectId: $projectId
+    filter: $filter
+    sort: $sort
+    first: $first
+    after: $after
+  ) {
+    nodes {
+      ...TaskFields
+    }
+    endCursor
+    hasNextPage
+  }
+}
+fragment TaskFields on Task {
+  id
+  projectId
+  title
+  description
+  status
+  priority
+  assignee {
+    id
+    name
+    email
+  }
+  dueDate
+  version
+  createdAt
+  updatedAt
+}
+query Detail($id: ID!) {
+  task(id: $id) {
+    ...TaskFields
+  }
+  comments(taskId: $id, first: 50) {
+    id
+    body
+    createdAt
+    author {
+      id
+      name
+    }
+  }
+}
+query MoreComments($id: ID!, $after: ID!) {
+  comments(taskId: $id, first: 50, after: $after) {
+    id
+    body
+    createdAt
+    author {
+      id
+      name
+    }
+  }
+}
+query Activity($workspaceId: ID!, $after: ID) {
+  activity(workspaceId: $workspaceId, first: 30, after: $after) {
+    id
+    type
+    entityId
+    createdAt
+    actor {
+      name
+    }
+  }
+}
+mutation CreateWorkspace($input: WorkspaceInput!) {
+  createWorkspace(input: $input) {
+    workspace {
+      id
+      name
+      role
+    }
+  }
+}
+mutation SetMember($input: MemberInput!) {
+  setMember(input: $input) {
+    member {
+      user {
+        id
+        name
+        email
+      }
+      role
+    }
+  }
+}
+mutation RemoveMember($input: RemoveMemberInput!) {
+  removeMember(input: $input) {
+    id
+  }
+}
+mutation CreateProject($input: ProjectInput!) {
+  createProject(input: $input) {
+    project {
+      id
+      name
+      workspaceId
+    }
+  }
+}
+mutation CreateTask($input: TaskInput!) {
+  createTask(input: $input) {
+    task {
+      ...TaskFields
+    }
+  }
+}
+mutation UpdateTask($input: UpdateTaskInput!) {
+  updateTask(input: $input) {
+    task {
+      ...TaskFields
+    }
+  }
+}
+mutation DeleteTask($input: DeleteTaskInput!) {
+  deleteTask(input: $input) {
+    id
+  }
+}
+mutation AddComment($input: CommentInput!) {
+  addComment(input: $input) {
+    comment {
+      id
+      body
+      createdAt
+      author {
+        id
+        name
+      }
+    }
+  }
+}
+subscription Changes($workspaceId: ID!) {
+  workspaceChanges(workspaceId: $workspaceId) {
+    id
+    workspaceId
+    entityId
+    type
+    timestamp
+    version
+  }
+}

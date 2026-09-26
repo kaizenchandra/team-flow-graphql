@@ -1,0 +1,22 @@
+name: Deploy existing TeamFlow host
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: teamflow-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    environment: production
+    runs-on: [ self-hosted, linux, teamflow ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check host configuration
+        run: test -r /etc/teamflow/runtime.env && docker compose version
+      - name: Build and deploy selected commit
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: docker compose --env-file /etc/teamflow/runtime.env up --build -d --wait --wait-timeout 180
+      - name: Verify deployment
+        run: sh scripts/smoke.sh http://localhost:8088
