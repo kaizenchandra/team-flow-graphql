@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
     plugins: [react()],
     server: {
-    watch:{ignored:["**/test-results/**","**/playwright-report/**"]},
+        watch: {ignored: ["**/test-results/**", "**/playwright-report/**"]},
         proxy: {
             "/graphql": {target: "http://localhost:8080", ws: true},
             "/auth": "http://localhost:8080",

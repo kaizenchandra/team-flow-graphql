@@ -2,17 +2,39 @@
 
 ## Local Compose
 
-Copy `.env.example` to `.env`; generate a unique password (`openssl rand -hex 32`) and replace the example value. Keep
+Run `sh scripts/init-env.sh` to create `.env` with a random password only when absent; retain it on subsequent starts. Keep
 `.env` mode 600 and outside Git. `APP_ORIGIN=http://localhost:8088`, `COOKIE_SECURE=false` are for local HTTP only. Run
 `docker compose up --build -d --wait --wait-timeout 180`, then `sh scripts/smoke.sh`. Nginx serves the compiled frontend
 and proxies `/auth` and `/graphql`, including upgrades, with a 75-second read timeout; server keepalives are 15 seconds.
 PostgreSQL persists in `teamflow_pgdata`. Web binds loopback 8088; DB binds loopback 55432. Backend is not exposed on
 the host. Images run as non-root except PostgreSQL's entrypoint initialization.
 
+## Database password mismatch
+
+`FATAL: password authentication failed for user "teamflow"` (SQLSTATE `28P01`) means the configured password does not
+match the role stored in PostgreSQL. Changing `.env` or `POSTGRES_PASSWORD` does not change an existing volume's role
+password. The database health check uses an authenticated connection through `db`, so it also detects this mismatch;
+`pg_isready` alone does not verify credentials. Restore the original `.env` if available.
+
+For this local Compose database, when the current `.env` password is the intended value, align the database role using
+the container's local administrative connection. This changes the role credential and retains all tables and data:
+
+```sh
+docker compose up -d db
+docker compose exec -T db sh -c 'printf "%s\n%s\n" "$POSTGRES_PASSWORD" "$POSTGRES_PASSWORD" | psql -X -v ON_ERROR_STOP=1 -U teamflow -d teamflow -c "\password teamflow"'
+docker compose up -d --wait --wait-timeout 120
+sh scripts/smoke.sh http://localhost:8088
+```
+
+The `psql` password command conceals the password from command output/history. Do not use `down -v` as a credential
+repair: it deletes application data. On a shared/remote database, coordinate credential rotation with its operator.
+See [Docker's persistence guidance](https://docs.docker.com/guides/postgresql/immediate-setup-and-data-persistence/).
+
 ## Single Linux host / TLS
 
 Provide Docker/Compose, disk space/monitoring, DNS and TLS termination. Put an approved host reverse proxy in front of
-`127.0.0.1:8088`, set `APP_ORIGIN=https://your-domain`, `COOKIE_SECURE=true`, `PUBLIC_SCHEME=https`. Preserve Host, Upgrade, Connection headers
+`127.0.0.1:8088`, set `APP_ORIGIN=https://your-domain`, `COOKIE_SECURE=true`, `PUBLIC_SCHEME=https`. Preserve Host,
+Upgrade, Connection headers
 and idle timeout >75 seconds. Do not expose backend or database publicly. Set a 64 KiB request body limit at the outer
 proxy and enable HSTS there after TLS works. No TLS certificates or public host are provisioned by this project.
 
@@ -75,8 +97,10 @@ schema downgrade implicitly. Session state is in memory, so a backend restart re
 
 ## Observability and external blockers
 
-`PUBLIC_SCHEME` is an operator-controlled value (`http` locally, `https` with TLS). Nginx renders it into the forwarding configuration at startup and does not derive it from client headers. The proxy intentionally does not trust arbitrary client X-Forwarded-For values, so per-IP limits aggregate clients behind the proxy. Before serving larger teams, configure a trusted proxy chain and dedicated edge rate limiting.
-
+`PUBLIC_SCHEME` is an operator-controlled value (`http` locally, `https` with TLS). Nginx renders it into the forwarding
+configuration at startup and does not derive it from client headers. The proxy intentionally does not trust arbitrary
+client X-Forwarded-For values, so per-IP limits aggregate clients behind the proxy. Before serving larger teams,
+configure a trusted proxy chain and dedicated edge rate limiting.
 
 Health endpoints are public and return sanitized status. Prometheus metrics are authenticated and not exposed by the
 Nginx public route. For production scraping, define a dedicated internal authentication/monitoring integration.
@@ -86,4 +110,6 @@ by application code.
 No host, domain, deployment runner or remote authorization was supplied. Remote deployment is therefore blocked on those
 external details. Consult `docs/progress.md` for the actual local deployment status.
 
-Local execution was verified at http://localhost:8088 with all three containers healthy, passing smoke checks and production browser tests. Remote HTTPS configuration is prepared but remains unverified until a target/domain is supplied.
+Local execution was verified at http://localhost:8088 with all three containers healthy, passing smoke checks and
+production browser tests. Remote HTTPS configuration is prepared but remains unverified until a target/domain is
+supplied.

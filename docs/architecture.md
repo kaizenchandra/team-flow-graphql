@@ -4,11 +4,11 @@
 
 ```mermaid
 flowchart LR
-  People[Workspace members] --> Browser[React browser application]
-  Browser -->|HTTPS: sessions + CSRF| Proxy[Nginx static UI and reverse proxy]
-  Browser <-->|WSS: graphql-transport-ws| Proxy
-  Proxy --> App[Java 21 / Boot 4.1.1 modular monolith]
-  App --> DB[(PostgreSQL 17)]
+    People[Workspace members] --> Browser[React browser application]
+    Browser -->|HTTPS: sessions + CSRF| Proxy[Nginx static UI and reverse proxy]
+    Browser <-->|WSS: graphql - transport - ws| Proxy
+    Proxy --> App[Java 21 / Boot 4.1.1 modular monolith]
+    App --> DB[(PostgreSQL 17)]
 ```
 
 ## Modules and dependency direction
@@ -37,15 +37,15 @@ User association resolvers and workspace/project nesting batch reads. Tests coun
 
 ```mermaid
 erDiagram
-  APP_USER ||--o{ MEMBERSHIP : joins
-  WORKSPACE ||--|{ MEMBERSHIP : contains
-  WORKSPACE ||--o{ PROJECT : contains
-  PROJECT ||--o{ TASK : contains
-  MEMBERSHIP o|--o{ TASK : assigned
-  TASK ||--o{ COMMENT : contains
-  APP_USER ||--o{ COMMENT : authors
-  WORKSPACE ||--o{ ACTIVITY : records
-  APP_USER ||--o{ ACTIVITY : acts
+    APP_USER ||--o{ MEMBERSHIP: joins
+    WORKSPACE ||--|{ MEMBERSHIP: contains
+    WORKSPACE ||--o{ PROJECT: contains
+    PROJECT ||--o{ TASK: contains
+    MEMBERSHIP o|--o{ TASK: assigned
+    TASK ||--o{ COMMENT: contains
+    APP_USER ||--o{ COMMENT: authors
+    WORKSPACE ||--o{ ACTIVITY: records
+    APP_USER ||--o{ ACTIVITY: acts
 ```
 
 Foreign keys bind each task to a project/workspace pair and each assignee to a membership in that same workspace. Unique

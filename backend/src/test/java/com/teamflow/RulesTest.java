@@ -13,7 +13,10 @@ class RulesTest {
     @Test
     void expiredSessionsCannotAuthorizeSocketDelivery() {
         var expired = new org.springframework.mock.web.MockHttpSession() {
-            @Override public long getLastAccessedTime() { return System.currentTimeMillis() - 5_000; }
+            @Override
+            public long getLastAccessedTime() {
+                return System.currentTimeMillis() - 5_000;
+            }
         };
         expired.setMaxInactiveInterval(1);
         var context = org.springframework.security.core.context.SecurityContextHolder.createEmptyContext();

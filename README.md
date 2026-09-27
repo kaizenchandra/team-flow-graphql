@@ -8,8 +8,8 @@ React. Authentication uses server sessions; live updates use `graphql-transport-
 Requires Docker Engine/Compose. From this directory:
 
 ```sh
-cp .env.example .env
-# Replace DB_PASSWORD with a randomly generated value. Never commit .env.
+sh scripts/init-env.sh
+# Creates .env with a random password once; preserves an existing .env.
 docker compose up --build -d --wait
 sh scripts/smoke.sh http://localhost:8088
 ```
@@ -21,10 +21,15 @@ browser, make a change in the other, and reconnect to see reconciliation.
 
 Stop: `docker compose down` (retains database volume). Never use `down -v` unless intentionally deleting all data.
 
+Keep `.env` for subsequent starts and never commit it. Do not copy `.env.example` over an existing `.env` or change
+`DB_PASSWORD` just to restart: PostgreSQL retains the original role password in its persistent volume.
+If startup reports `password authentication failed for user "teamflow"`, see
+[credential recovery](docs/deployment.md#database-password-mismatch).
+
 ## IntelliJ and local development
 
 1. Set project SDK and Maven runner JDK to **21**. Import `backend/pom.xml` as Maven.
-2. Copy `.env.example` to `.env`, replace its password, and run `docker compose up -d db`.
+2. Run `sh scripts/init-env.sh` to create or retain `.env`, then run `docker compose up -d db`.
 3. Run `scripts/dev-backend.sh` with `JAVA_HOME` pointing to JDK 21. Or run `TeamFlowApplication` in IntelliJ with
    `DB_PASSWORD` and `APP_ORIGIN=http://localhost:5173` set in its run configuration. PostgreSQL binds to loopback
    **55432** to avoid occupying a conventional installation on 5432.
